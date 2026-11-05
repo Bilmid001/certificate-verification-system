@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CertVerify - Automated Certificate Verification System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        
+        .auth-container {
+            max-width: 450px;
+            margin: 5% auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px 15px;
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        
+        .stat-card .label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            background: white;
+            padding: 0.8rem 1rem;
+        }
+        
+        .sidebar {
+            background: var(--primary);
+            color: white;
+            min-height: calc(100vh - 70px);
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin: 5px 15px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        
+        .dashboard-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .verification-result {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding-top: 25px;
+            margin-top: 25px;
+        }
+        
+        .qr-code-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .action-buttons .btn {
+            margin: 0 5px;
+        }
+        
+        .certificate-card {
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .certificate-card.revoked {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .certificate-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px dashed #ced4da;
+        }
+        
+        .certificate-preview img {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .certificate-form .form-label {
+            font-weight: 500;
+        }
+        
+        .dashboard-widget {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        
+        .widget-primary { background: linear-gradient(135deg, #3498db, #2c3e50); }
+        .widget-success { background: linear-gradient(135deg, #27ae60, #219653); }
+        .widget-info { background: linear-gradient(135deg, #00cec9, #0984e3); }
+        .widget-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        
+        .recent-activity {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .recent-activity li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .recent-activity li:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-badge {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            margin-right: 10px;
+            color: white;
+        }
+        
+        .badge-valid { background-color: var(--success); }
+        .badge-invalid { background-color: var(--danger); }
+        .badge-revoked { background-color: var(--warning); }
+        
+        .page-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .page-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+        
+        .verification-input {
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        .dashboard-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .dashboard-logo span {
+            color: #3498db;
+        }
+        
+        .main-content {
+            padding: 30px;
+            background: #f5f7fa;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .search-bar {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .certificate-number {
+            font-family: monospace;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screens -->
+    <div id="auth-screens">
+        <!-- Login Screen -->
+        <div id="login-screen" class="auth-container">
+            <div class="card">
+                <div class="card-header text-center bg-primary text-white py-4">
+                    <h2><i class="fas fa-graduation-cap me-2"></i>CertVerify</h2>
+                    <p class="mb-0">Automated Certificate Verification System</p>
+                </div>
+                <div class="card-body p-4">
+                    <ul class="nav nav-tabs mb-4" id="loginTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="institution-tab" data-bs-toggle="tab" data-bs-target="#institution" type="button" role="tab">Institution Login</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab">Admin Login</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="loginTabsContent">
+                        <!-- Institution Login -->
+                        <div class="tab-pane fade show active" id="institution" role="tabpanel">
+                            <form>
+                                <div class="mb-3">
+                                    <label for="institution-email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="institution-email" placeholder="name@institution.edu">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="institution-password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="institution-password" placeholder="Enter password">
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="remember">
+                                    <label class="form-check-label" for="remember">Remember me</label>
+                                </div>
+                                <button type="button" id="institution-login-btn" class="btn btn-primary w-100 py-2">Login to Institution Portal</button>
+                                <div class="text-center mt-3">
+                                    <a href="#" class="text-decoration-none">Forgot password?</a>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Admin Login -->
+                        <div class="tab-pane fade" id="admin" role="tabpanel">
+                            <form>
+                                <div class="mb-3">
+                                    <label for="admin-username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="admin-username" placeholder="Enter admin username">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="admin-password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="admin-password" placeholder="Enter admin password">
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="admin-remember">
+                                    <label class="form-check-label" for="admin-remember">Remember me</label>
+                                </div>
+                                <button type="button" id="admin-login-btn" class="btn btn-primary w-100 py-2">Login to Admin Dashboard</button>
+                                <div class="text-center mt-3">
+                                    <a href="#" class="text-decoration-none">Forgot password?</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p>Want to verify a certificate? <a href="#" id="public-verify-link">Verify here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Public Verification Screen -->
+        <div id="public-verify-screen" class="auth-container" style="display: none;">
+            <div class="card">
+                <div class="card-header text-center bg-success text-white py-4">
+                    <h2><i class="fas fa-shield-alt me-2"></i>Certificate Verification</h2>
+                    <p class="mb-0">Verify the authenticity of certificates</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="qr-code-container">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com/verify/123456" alt="QR Code">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-center">Enter certificate number to verify its authenticity</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control verification-input" placeholder="Enter certificate number">
+                            <button class="btn btn-success" type="button">Verify</button>
+                        </div>
+                    </div>
+                    
+                    <div class="verification-result" style="display: none;">
+                        <div class="alert alert-success">
+                            <h4 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Valid Certificate</h4>
+                            <p>This certificate has been verified as authentic.</p>
+                        </div>
+                        
+                        <div class="certificate-details">
+                            <h5>Certificate Details</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Certificate Number</th>
+                                    <td class="certificate-number">CERT-2023-789456</td>
+                                </tr>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <td>Sarah Johnson</td>
+                                </tr>
+                                <tr>
+                                    <th>Course Name</th>
+                                    <td>Computer Science</td>
+                                </tr>
+                                <tr>
+                                    <th>Issuing Institution</th>
+                                    <td>Tech University</td>
+                                </tr>
+                                <tr>
+                                    <th>Issue Date</th>
+                                    <td>June 15, 2023</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p>Are you an institution? <a href="#" id="back-to-login">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" style="display: none;">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white">
+            <div class="container-fluid">
+                <a class="navbar-brand logo" href="#"><i class="fas fa-graduation-cap me-2"></i>Cert<span>Verify</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <img src="https://ui-avatars.com/api/?name=Admin+User&background=3498db&color=fff" class="rounded-circle me-2" width="30" height="30">
+                                <span>Admin User</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="admin-logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-2 sidebar d-none d-lg-block">
+                    <div class="dashboard-logo">
+                        <i class="fas fa-graduation-cap me-2"></i>Cert<span>Verify</span>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-university"></i> Institutions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-certificate"></i> Certificates
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-shield-alt"></i> Fraud Detection
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-users"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="col-lg-10 main-content">
+                    <div class="dashboard-header">
+                        <h1 class="h3 mb-0">Admin Dashboard</h1>
+                        <p class="text-muted mb-0">Monitor certificate verification activities and system status</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-primary">
+                                <i class="fas fa-university"></i>
+                                <div class="number">24</div>
+                                <div class="label">Institutions</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-success">
+                                <i class="fas fa-certificate"></i>
+                                <div class="number">1,842</div>
+                                <div class="label">Certificates</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-info">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="number">5,327</div>
+                                <div class="label">Verifications</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div class="number">18</div>
+                                <div class="label">Fraud Cases</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Recent Verification Activities</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Certificate</th>
+                                                    <th>Student</th>
+                                                    <th>Institution</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="certificate-number">CERT-2023-789456</td>
+                                                    <td>Sarah Johnson</td>
+                                                    <td>Tech University</td>
+                                                    <td><span class="badge bg-success">Valid</span></td>
+                                                    <td>Today, 10:25 AM</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="certificate-number">CERT-2023-654123</td>
+                                                    <td>Michael Chen</td>
+                                                    <td>Global College</td>
+                                                    <td><span class="badge bg-danger">Revoked</span></td>
+                                                    <td>Today, 09:45 AM</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="certificate-number">CERT-2023-321987</td>
+                                                    <td>Emma Rodriguez</td>
+                                                    <td>Science Institute</td>
+                                                    <td><span class="badge bg-success">Valid</span></td>
+                                                    <td>Today, 08:30 AM</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="certificate-number">CERT-2022-987654</td>
+                                                    <td>David Kim</td>
+                                                    <td>Business School</td>
+                                                    <td><span class="badge bg-warning">Suspicious</span></td>
+                                                    <td>Yesterday, 04:15 PM</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="certificate-number">CERT-2023-112233</td>
+                                                    <td>Olivia Brown</td>
+                                                    <td>Design Academy</td>
+                                                    <td><span class="badge bg-success">Valid</span></td>
+                                                    <td>Yesterday, 02:20 PM</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Fraud Detection Alerts</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-danger">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0 me-3">
+                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6>Certificate Forgery Detected</h6>
+                                                <p class="mb-0">Certificate #CERT-2023-654123 has been revoked</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0 me-3">
+                                                <i class="fas fa-user-secret fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6>Suspicious Verification Attempt</h6>
+                                                <p class="mb-0">Multiple verifications for same certificate from different IPs</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0 me-3">
+                                                <i class="fas fa-clock fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6>Certificate Expiry Warning</h6>
+                                                <p class="mb-0">24 certificates will expire in the next 30 days</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Verification Stats</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="verificationChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Institution Dashboard -->
+    <div id="institution-dashboard" style="display: none;">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white">
+            <div class="container-fluid">
+                <a class="navbar-brand logo" href="#"><i class="fas fa-graduation-cap me-2"></i>Cert<span>Verify</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <img src="https://ui-avatars.com/api/?name=Tech+University&background=3498db&color=fff" class="rounded-circle me-2" width="30" height="30">
+                                <span>Tech University</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="institution-logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-2 sidebar d-none d-lg-block">
+                    <div class="dashboard-logo">
+                        <i class="fas fa-graduation-cap me-2"></i>Cert<span>Verify</span>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-plus-circle"></i> Issue Certificate
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-check-circle"></i> Verify Certificate
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-list"></i> Certificate List
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="col-lg-10 main-content">
+                    <div class="dashboard-header">
+                        <h1 class="h3 mb-0">Institution Dashboard</h1>
+                        <p class="text-muted mb-0">Tech University - Certificate Management Portal</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-primary">
+                                <i class="fas fa-certificate"></i>
+                                <div class="number">486</div>
+                                <div class="label">Certificates Issued</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-success">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="number">1,254</div>
+                                <div class="label">Verifications</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-info">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div class="number">3</div>
+                                <div class="label">Revoked Certificates</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-card widget-warning">
+                                <i class="fas fa-clock"></i>
+                                <div class="number">12</div>
+                                <div class="label">Expiring Soon</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-lg-7">
+                            <div class="card">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Recent Certificates</h5>
+                                    <button class="btn btn-sm btn-primary">Issue New</button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group">
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Sarah Johnson</h6>
+                                                <small>Today</small>
+                                            </div>
+                                            <p class="mb-1">Computer Science - Bachelor's Degree</p>
+                                            <small class="certificate-number">CERT-2023-789456</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Michael Brown</h6>
+                                                <small>Yesterday</small>
+                                            </div>
+                                            <p class="mb-1">Business Administration - MBA</p>
+                                            <small class="certificate-number">CERT-2023-789455</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Emma Rodriguez</h6>
+                                                <small>June 12</small>
+                                            </div>
+                                            <p class="mb-1">Graphic Design - Diploma</p>
+                                            <small class="certificate-number">CERT-2023-789454</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">David Kim</h6>
+                                                <small>June 10</small>
+                                            </div>
+                                            <p class="mb-1">Electrical Engineering - Master's</p>
+                                            <small class="certificate-number">CERT-2023-789453</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Olivia Chen</h6>
+                                                <small>June 8</small>
+                                            </div>
+                                            <p class="mb-1">Psychology - Bachelor's Degree</p>
+                                            <small class="certificate-number">CERT-2023-789452</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-5">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Issue New Certificate</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form>
+                                        <div class="mb-3">
+                                            <label class="form-label">Student Name</label>
+                                            <input type="text" class="form-control" placeholder="Enter student name">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Program/Course</label>
+                                            <input type="text" class="form-control" placeholder="Enter program/course name">
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Issue Date</label>
+                                                <input type="date" class="form-control">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Expiry Date (Optional)</label>
+                                                <input type="date" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Upload Certificate (Optional)</label>
+                                            <input type="file" class="form-control">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Generate Certificate</button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Verification Activity</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="institutionChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Navigation functionality
+        document.getElementById('public-verify-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('public-verify-screen').style.display = 'block';
+        });
+        
+        document.getElementById('back-to-login').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('public-verify-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        });
+        
+        document.getElementById('institution-login-btn').addEventListener('click', function() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('institution-dashboard').style.display = 'block';
+        });
+        
+        document.getElementById('admin-login-btn').addEventListener('click', function() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'block';
+        });
+        
+        document.getElementById('admin-logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        });
+        
+        document.getElementById('institution-logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('institution-dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        });
+        
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Admin chart
+            const ctx = document.getElementById('verificationChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Valid', 'Revoked', 'Suspicious'],
+                    datasets: [{
+                        data: [78, 12, 10],
+                        backgroundColor: ['#27ae60', '#e74c3c', '#f39c12'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Verification Status Distribution'
+                        }
+                    }
+                }
+            });
+            
+            // Institution chart
+            const ictx = document.getElementById('institutionChart').getContext('2d');
+            new Chart(ictx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Certificates Issued',
+                        data: [65, 59, 80, 81, 76, 72],
+                        backgroundColor: '#3498db',
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

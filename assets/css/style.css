@@ -1,0 +1,83 @@
+/* Main styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.btn {
+    border-radius: 5px;
+    padding: 8px 20px;
+}
+
+/* Navbar styles */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Verification result styles */
+.verification-result {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+/* Dashboard widgets */
+.dashboard-widget {
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.widget-primary {
+    background-color: #4e73df;
+}
+
+.widget-success {
+    background-color: #1cc88a;
+}
+
+.widget-info {
+    background-color: #36b9cc;
+}
+
+.widget-warning {
+    background-color: #f6c23e;
+}
+
+/* Responsive tables */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* QR code display */
+.qr-code-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Footer styles */
+.footer {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+    margin-top: 40px;
+    border-top: 1px solid #eee;
+}
